@@ -13,3 +13,8 @@ export function setAccessToken(token: string) {
 export function setRefreshToken(token: string) {
   localStorage.setItem('refreshToken', token);
 }
+
+export function clearTokens() {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+}
