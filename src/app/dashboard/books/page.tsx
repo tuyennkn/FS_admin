@@ -21,8 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Plus, Edit, Eye, EyeOff, BookOpen, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Search, Plus, Edit, Eye, EyeOff, BookOpen, Image as ImageIcon, Loader2, Upload } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/hooks/redux';
+import { useRouter } from 'next/navigation';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { ImageUploadService } from '@/services/cloudinaryService';
 import { 
@@ -292,6 +293,7 @@ function BookDialog({ open, onOpenChange, book, categories, onSubmit }: BookDial
 }
 
 export default function BooksPage() {
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const { books, loading, error } = useAppSelector((state) => state.books);
   const { categories } = useAppSelector((state) => state.categories);
@@ -380,10 +382,19 @@ export default function BooksPage() {
             <h1 className="text-2xl font-bold text-gray-900">Books Management</h1>
             <p className="text-gray-600">Manage book inventory and details</p>
           </div>
-          <Button onClick={openCreateDialog}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Book
-          </Button>
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              onClick={() => router.push('/dashboard/books/import')}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Import Books
+            </Button>
+            <Button onClick={openCreateDialog}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Book
+            </Button>
+          </div>
         </div>
 
         {/* Search and filters */}
