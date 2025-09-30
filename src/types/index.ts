@@ -5,18 +5,25 @@ export interface BaseEntity {
   updatedAt: string;
 }
 
+export interface BaseApiResponse {
+  success: boolean;
+  message: string;
+  data?: any;
+  statusCode?: number;
+}
+
 // User types
 export interface User extends BaseEntity {
   username: string;
   fullname: string;
   email: string;
   phone?: string;
-  gender?: 'male' | 'female' | 'other';
+  gender?: "male" | "female" | "other";
   birthday?: string;
   avatar?: string;
   persona?: string;
   address?: string;
-  role: 'admin' | 'user';
+  role: "admin" | "user";
   isDisable: boolean;
 }
 
@@ -41,7 +48,7 @@ export interface RegisterRequest {
   email: string;
   password: string;
   phone?: string;
-  gender?: 'male' | 'female' | 'other';
+  gender?: "male" | "female" | "other";
   birthday?: string;
   avatar?: string;
   persona?: string;
@@ -67,50 +74,146 @@ export interface UpdateCategoryRequest {
   isDisable?: boolean;
 }
 
+// PendingCategory types
+export interface PendingCategoryBookData {
+  title: string;
+  author: string;
+  genre: string;
+  image: string[];
+}
+
+export interface PendingCategoryReviewer {
+  id: string;
+  username: string;
+  email: string;
+  role: string;
+}
+
+export interface PendingCategory extends BaseEntity {
+  ai_recommended_name: string;
+  ai_recommended_description?: string;
+  book_id: string;
+  book_data: PendingCategoryBookData;
+  status: 'pending' | 'approved' | 'rejected';
+  reviewed_by?: string | PendingCategoryReviewer;
+  review_notes?: string;
+  isDisable: boolean;
+}
+
+export interface CreatePendingCategoryRequest {
+  book_id: string;
+  genre: string;
+}
+
+export interface ApprovePendingCategoryRequest {
+  category_name: string;
+  category_description?: string;
+  review_notes?: string;
+}
+
+export interface RejectPendingCategoryRequest {
+  review_notes: string;
+}
+
+export interface AssignPendingCategoryRequest {
+  existing_category_id: string;
+  review_notes?: string;
+}
+
+export interface PendingCategoryStats {
+  pending: number;
+  approved: number;
+  rejected: number;
+  total: number;
+  recent_activity?: any[];
+}
+
+export interface PendingCategoryFilters {
+  status?: 'pending' | 'approved' | 'rejected';
+  search?: string;
+  page?: number;
+  limit?: number;
+  sort?: string;
+}
+
+export interface PendingCategoryListResponse extends BaseApiResponse {
+  results: PendingCategory[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+  total: number;
+  stats?: PendingCategoryStats;
+}
+
 // Book types
+export interface BookAttributes {
+  isbn?: string;
+  publisher?: string;
+  firstPublishDate?: string;
+  publishDate?: string;
+  pages?: number;
+  language?: string;
+  edition?: string;
+  bookFormat?: string;
+  characters?: string[];
+  awards?: string[];
+}
+
 export interface Book extends BaseEntity {
   title: string;
   author: string;
-  summary: string;
-  publisher: string;
+  description: string; // Changed from summary
+  slug: string; // New required field
+  publisher?: string; // Keep for backward compatibility
   price: number;
   rating: number;
-  category_id: Category | string | null;
-  summaryvector?: string;
+  category: Category | string | null;
+  genre: string;
+  embedding?: number[]; // Changed from summaryvector to embedding array
   quantity: number;
   sold: number;
   isDisable: boolean;
-  imageUrl?: string;
+  image?: string[]; // Changed from imageUrl to image array
+  attributes?: BookAttributes; // New attributes object
 }
 
 export interface CreateBookRequest {
   title: string;
   author: string;
-  summary: string;
-  publisher: string;
+  description: string; // Changed from summary
+  slug?: string; // Auto-generated if not provided
+  publisher?: string; // Keep for backward compatibility
   price: number;
   rating: number;
-  category_id: string;
-  summaryvector?: string;
+  category: string;
+  genre?: string;
+  embedding?: number[]; // Changed from summaryvector
   quantity: number;
   sold?: number;
-  imageUrl?: string;
+  image?: string[]; // Changed from imageUrl
+  attributes?: BookAttributes; // New attributes object
 }
 
 export interface UpdateBookRequest {
   id: string;
   title?: string;
   author?: string;
-  summary?: string;
+  description?: string; // Changed from summary
+  slug?: string;
   publisher?: string;
   price?: number;
   rating?: number;
-  category_id?: string;
-  summaryvector?: string;
+  category?: string;
+  genre?: string;
+  embedding?: number[]; // Changed from summaryvector
   quantity?: number;
   sold?: number;
-  imageUrl?: string;
+  image?: string[]; // Changed from imageUrl
   isDisable?: boolean;
+  attributes?: BookAttributes; // New attributes object
 }
 
 // Comment types
@@ -140,16 +243,20 @@ export interface ApiResponse<T> {
 }
 
 export interface PaginatedResponse<T> {
+  data: T[];
+  timestamp: string;
   success: boolean;
   message: string;
-  data: {
-    items: T[];
-    currentPage: number;
-    totalPages: number;
-    totalItems: number;
-    itemsPerPage: number;
-  };
-  statusCode: number;
+  meta: {
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalItems: number;
+      itemsPerPage: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    }
+  }
 }
 
 // Table and UI types
@@ -164,7 +271,7 @@ export interface PaginationParams {
   page: number;
   limit: number;
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
   search?: string;
 }
 

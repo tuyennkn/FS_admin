@@ -9,6 +9,7 @@ import { fetchUsers } from '@/features/user/userManagementSlice';
 import { fetchCategories } from '@/features/category/categorySlice';
 import { fetchBooks } from '@/features/book/bookSlice';
 import { fetchComments } from '@/features/comment/commentSlice';
+import { useRouter } from 'next/dist/client/components/navigation';
 
 interface StatCardProps {
   title: string;
@@ -91,6 +92,7 @@ export default function DashboardPage() {
   const { books } = useAppSelector((state) => state.books);
   const { comments } = useAppSelector((state) => state.comments);
 
+
   useEffect(() => {
     dispatch(fetchUsers());
     dispatch(fetchCategories());
@@ -152,62 +154,62 @@ export default function DashboardPage() {
     <div className="space-y-6">
       {/* Page header */}
       <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">Welcome back! Here's what's happening with your bookstore.</p>
-        </div>
+        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-gray-600">Welcome back! Here's what's happening with your bookstore.</p>
+      </div>
 
-        {/* Stats grid */}
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {stats.map((stat, index) => (
-            <StatCard key={index} {...stat} />
-          ))}
-        </div>
+      {/* Stats grid */}
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {stats.map((stat, index) => (
+          <StatCard key={index} {...stat} />
+        ))}
+      </div>
 
-        {/* Charts and activity */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* Quick stats */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Overview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Users Status</span>
-                  <span className="text-sm text-gray-500">
-                    {activeUsers} active / {users.length} total
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-blue-600 h-2 rounded-full" 
-                    style={{ width: `${users.length > 0 ? (activeUsers / users.length) * 100 : 0}%` }}
-                  ></div>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Books Status</span>
-                  <span className="text-sm text-gray-500">
-                    {activeBooks} active / {books.length} total
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-green-600 h-2 rounded-full" 
-                    style={{ width: `${books.length > 0 ? (activeBooks / books.length) * 100 : 0}%` }}
-                  ></div>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Categories</span>
-                  <span className="text-sm text-gray-500">{categories.length} total</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-purple-600 h-2 rounded-full w-full"></div>
-                </div>
+      {/* Charts and activity */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Quick stats */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Overview</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">Users Status</span>
+                <span className="text-sm text-gray-500">
+                  {activeUsers} active / {users.length} total
+                </span>
               </div>
-            </CardContent>
-          </Card>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full"
+                  style={{ width: `${users.length > 0 ? (activeUsers / users.length) * 100 : 0}%` }}
+                ></div>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">Books Status</span>
+                <span className="text-sm text-gray-500">
+                  {activeBooks} active / {books.length} total
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-green-600 h-2 rounded-full"
+                  style={{ width: `${books.length > 0 ? (activeBooks / books.length) * 100 : 0}%` }}
+                ></div>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">Categories</span>
+                <span className="text-sm text-gray-500">{categories.length} total</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-purple-600 h-2 rounded-full w-full"></div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Recent activity */}
         <RecentActivity />

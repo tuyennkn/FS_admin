@@ -16,7 +16,8 @@ import {
   CreateCommentRequest,
   UpdateCommentRequest,
   ApiResponse,
-  DashboardStats
+  DashboardStats,
+  PaginatedResponse
 } from '../types';
 
 const api = axios.create({
@@ -172,6 +173,13 @@ export const bookAPI = {
     return response.data as ApiResponse<Book[]>;
   },
 
+  getPaginated: async (page: number, limit: number): Promise<PaginatedResponse<Book>> => {
+    const response = await api.get(
+      API_ENDPOINTS.BOOK.PAGINATED(page, limit)
+    );
+    return response.data as PaginatedResponse<Book>;
+  },
+
   getById: async (id: string): Promise<ApiResponse<Book>> => {
     const response = await api.get(
       `${API_ENDPOINTS.BOOK.GET_BY_ID}/${id}`
@@ -292,4 +300,49 @@ export const apiService = {
   delete: <T = any>(url: string, config?: any) => api.delete<T>(url, config),
   patch: <T = any>(url: string, data?: any, config?: any) => api.patch<T>(url, data, config),
   request: <T = any>(config: any) => api.request<T>(config),
+  
+  // Add services
+  categories: {
+    getAll: async () => {
+      const response = await api.get('/category/allCategories');
+      return response.data;
+    }
+  },
+  
+  pendingCategories: {
+    getAll: async (params: any) => {
+      const response = await api.get('/pending-categories', { params });
+      return response.data;
+    },
+    
+    getById: async (id: string) => {
+      const response = await api.get(`/pending-categories/${id}`);
+      return response.data;
+    },
+    
+    getStats: async () => {
+      const response = await api.get('/pending-categories/stats');
+      return response.data;
+    },
+    
+    approve: async (id: string, data: any) => {
+      const response = await api.put(`/pending-categories/${id}/approve`, data);
+      return response.data;
+    },
+    
+    reject: async (id: string, data: any) => {
+      const response = await api.put(`/pending-categories/${id}/reject`, data);
+      return response.data;
+    },
+    
+    assignToExisting: async (id: string, data: any) => {
+      const response = await api.put(`/pending-categories/${id}/assign`, data);
+      return response.data;
+    },
+    
+    delete: async (id: string) => {
+      const response = await api.delete(`/pending-categories/${id}`);
+      return response.data;
+    }
+  }
 };

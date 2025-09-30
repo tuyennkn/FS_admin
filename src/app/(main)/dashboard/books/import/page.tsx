@@ -9,11 +9,11 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Upload, 
-  FileText, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Upload,
+  FileText,
+  CheckCircle,
+  XCircle,
   AlertCircle,
   Download,
   ArrowLeft,
@@ -23,6 +23,8 @@ import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/hooks/redux';
 import { apiService } from '@/services/apiService';
 import { getAccessToken } from '@/utils/tokenUtils';
+import { Book } from '@/types';
+import Papa from "papaparse";
 
 interface ImportResult {
   imported: number;
@@ -34,17 +36,26 @@ interface ImportResult {
 interface BookRecord {
   title: string;
   author?: string;
-  summary?: string;
-  category?: string;
+  description?: string; // Changed from summary
+  genre?: string; // Changed from category
+  slug?: string;
   publisher?: string;
   price: string;
   publishDate?: string;
+  image?: string[];
+  isbn?: string;
+  pages?: number;
+  language?: string;
+  edition?: string;
+  bookFormat?: string;
+  characters?: string[];
+  awards?: string[];
 }
 
 export default function ImportBooksPage() {
   const router = useRouter();
   const { user } = useAppSelector((state) => state.auth);
-  
+
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [jsonData, setJsonData] = useState<string>('');
   const [importMode, setImportMode] = useState<'csv' | 'json'>('csv');
@@ -52,8 +63,64 @@ export default function ImportBooksPage() {
   const [result, setResult] = useState<ImportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Helper function to parse array fields from CSV
+  const parseArrayField = (fieldValue: string): string[] | undefined => {
+    if (!fieldValue || fieldValue.trim() === '') {
+      return undefined;
+    }
+    
+    try {
+      // Try to parse as JSON first
+      return JSON.parse(fieldValue);
+    } catch {
+      // If JSON.parse fails, try to parse Python-style array format
+      // e.g., "['item1', 'item2']" or "['Sancho Panza', 'Don Quijote de la Mancha']"
+      const cleaned = fieldValue
+        .trim()
+        .replace(/^\[|\]$/g, '') // Remove outer brackets
+        .replace(/'/g, '"'); // Replace single quotes with double quotes
+      
+      // Split by comma and clean each item
+      const items = cleaned.split(',').map(item => 
+        item.trim().replace(/^"(.*)"$/, '$1') // Remove surrounding quotes
+      ).filter(item => item.length > 0);
+      
+      return items.length > 0 ? items : undefined;
+    }
+  };
+
+  // Helper function to parse genre field (convert array to comma-separated string)
+  const parseGenreField = (fieldValue: string): string => {
+    if (!fieldValue || fieldValue.trim() === '') {
+      return "";
+    }
+    
+    try {
+      // Try to parse as JSON array first
+      const parsed = JSON.parse(fieldValue);
+      if (Array.isArray(parsed)) {
+        return parsed.join(', ');
+      }
+      return fieldValue;
+    } catch {
+      // If JSON.parse fails, try to parse Python-style array format
+      // e.g., "['Classics', 'Fiction', 'Literature']"
+      const cleaned = fieldValue
+        .trim()
+        .replace(/^\[|\]$/g, '') // Remove outer brackets
+        .replace(/'/g, ''); // Remove single quotes
+      
+      // Split by comma and clean each item, then join back
+      const items = cleaned.split(',').map(item => 
+        item.trim().replace(/^"(.*)"$/, '$1') // Remove surrounding quotes if any
+      ).filter(item => item.length > 0);
+      
+      return items.join(', ');
+    }
+  };
 
   // Sample JSON data for reference
   const sampleJsonData = {
@@ -61,11 +128,20 @@ export default function ImportBooksPage() {
       {
         title: "Sample Book Title",
         author: "Author Name",
-        summary: "Book description here...",
-        category: "Fiction",
+        description: "Book description here...",
+        genre: "Fiction",
+        slug: "sample-book-title-123",
         publisher: "Publisher Name",
         price: "19.99",
-        publishDate: "2024-01-01"
+        publishDate: "2024-01-01",
+        image: ["https://example.com/cover.jpg"],
+        isbn: "9781234567890",
+        pages: 300,
+        language: "English",
+        edition: "First Edition",
+        bookFormat: "Paperback",
+        characters: ["Main Character", "Supporting Character"],
+        awards: ["Book Award 2024"]
       }
     ]
   };
@@ -84,66 +160,43 @@ export default function ImportBooksPage() {
   };
 
   const convertCsvToJson = (csvText: string): BookRecord[] => {
-    const lines = csvText.split('\n').filter(line => line.trim());
-    if (lines.length < 2) throw new Error('CSV file must have header and at least one data row');
-    
-    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+    const result = Papa.parse(csvText, { header: true, skipEmptyLines: true });
     const books: BookRecord[] = [];
-    
-    for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-      if (values.length < headers.length) continue;
+
+    for (const row of result.data as any[]) {
+      const price = parseFloat((row["price"] || "").replace(/[$,]/g, "")) || 0;
       
+      // Generate slug from title
+      const slug = (row["title"] || "").toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+
       const book: BookRecord = {
-        title: '',
-        price: ''
-      };
-      
-      headers.forEach((header, index) => {
-        const value = values[index] || '';
+        title: row["title"]?.trim() || "",
+        author: row["author"]?.trim() || "",
+        description: row["description"]?.trim() || "",
+        slug: slug + '-' + Date.now(),
+        publisher: row["publisher"]?.trim() || "",
+        price: price.toString(),
+        genre: parseGenreField(row["genres"]),
+        publishDate: row["publishDate"] || null,
+        image: row["coverImg"] ? [row["coverImg"]] : [],
         
-        switch (header.toLowerCase()) {
-          case 'title':
-            book.title = value;
-            break;
-          case 'authors':
-          case 'author':
-            book.author = value.startsWith('By ') ? value.substring(3) : value;
-            break;
-          case 'description':
-          case 'summary':
-            book.summary = value;
-            break;
-          case 'category':
-          case 'genre':
-            book.category = value;
-            break;
-          case 'publisher':
-            book.publisher = value;
-            break;
-          case 'price starting with ($)':
-          case 'price':
-            book.price = value.replace(/[$,]/g, '');
-            break;
-          case 'publish date (year)':
-            if (value && !book.publishDate) {
-              book.publishDate = `${value}-01-01`;
-            }
-            break;
-          case 'publish date (month)':
-            if (value && book.publishDate) {
-              const year = book.publishDate.split('-')[0];
-              book.publishDate = `${year}-${value.padStart(2, '0')}-01`;
-            }
-            break;
-        }
-      });
-      
-      if (book.title && book.price) {
+        // Additional attributes from demo.csv
+        isbn: row["isbn"] || undefined,
+        pages: row["pages"] ? parseInt(row["pages"]) : undefined,
+        language: row["language"] || undefined,
+        edition: row["edition"] || undefined,
+        bookFormat: row["bookFormat"] || undefined,
+        characters: parseArrayField(row["characters"]),
+        awards: parseArrayField(row["awards"])
+      };
+
+      if (book.title && parseFloat(book.price) > 0) {
         books.push(book);
       }
     }
-    
+
     return books;
   };
 
@@ -166,6 +219,7 @@ export default function ImportBooksPage() {
         // Process CSV file
         const csvText = await csvFile.text();
         booksData = convertCsvToJson(csvText);
+        console.log('Converted CSV Data:', booksData);
         setProgress(30);
       } else if (importMode === 'json' && jsonData) {
         // Process JSON data
@@ -209,9 +263,9 @@ export default function ImportBooksPage() {
   };
 
   const downloadSampleCsv = () => {
-    const csvContent = `Title,Authors,Description,Category,Publisher,Price Starting With ($),Publish Date (Month),Publish Date (Year)
-Sample Book 1,By John Doe,This is a sample book description,Fiction,Sample Publisher,$19.99,1,2024
-Sample Book 2,By Jane Smith,Another sample book,Non-Fiction,Another Publisher,$29.99,6,2023`;
+    const csvContent = `title,author,description,genres,publisher,price,publishDate,coverImg,isbn,pages,language,edition,bookFormat,characters,awards
+"Sample Book 1","John Doe","This is a sample book description","['Fiction', 'Adventure']","Sample Publisher","19.99","2024-01-01","https://example.com/cover1.jpg","9781234567890","300","English","First Edition","Paperback","['Main Character', 'Supporting Character']","['Sample Award 2024']"
+"Sample Book 2","Jane Smith","Another sample book","['Non-Fiction', 'Biography']","Another Publisher","29.99","2023-06-01","https://example.com/cover2.jpg","9781234567891","250","English","Second Edition","Hardcover","['Historical Figure']","['Biography Award 2023']"`;
     
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -220,9 +274,7 @@ Sample Book 2,By Jane Smith,Another sample book,Non-Fiction,Another Publisher,$2
     a.download = 'sample_books.csv';
     a.click();
     window.URL.revokeObjectURL(url);
-  };
-
-  const resetForm = () => {
+  };  const resetForm = () => {
     setCsvFile(null);
     setJsonData('');
     setResult(null);
@@ -306,7 +358,7 @@ Sample Book 2,By Jane Smith,Another sample book,Non-Fiction,Another Publisher,$2
                 className="mt-2"
               />
             </div>
-            
+
             {csvFile && (
               <Alert>
                 <FileText className="h-4 w-4" />
@@ -319,8 +371,15 @@ Sample Book 2,By Jane Smith,Another sample book,Non-Fiction,Another Publisher,$2
             <div className="text-sm text-gray-600">
               <p><strong>Expected CSV format:</strong></p>
               <code className="block bg-gray-100 p-2 rounded mt-2">
-                Title,Authors,Description,Category,Publisher,Price Starting With ($),Publish Date (Month),Publish Date (Year)
+                title,author,description,genres,publisher,price,publishDate,coverImg,isbn,pages,language,edition,bookFormat,characters,awards
               </code>
+              <p className="mt-2"><strong>Notes:</strong></p>
+              <ul className="list-disc list-inside text-xs mt-1 space-y-1">
+                <li>Arrays should be in Python format: ['item1', 'item2']</li>
+                <li>genres, characters, awards support array format</li>
+                <li>price should be numeric (without $ sign)</li>
+                <li>publishDate format: YYYY-MM-DD</li>
+              </ul>
             </div>
           </CardContent>
         </Card>
@@ -343,11 +402,11 @@ Sample Book 2,By Jane Smith,Another sample book,Non-Fiction,Another Publisher,$2
                 className="mt-2 h-64 font-mono text-sm"
               />
             </div>
-            
+
             <div className="text-sm text-gray-600">
               <p><strong>Required JSON format:</strong></p>
               <pre className="bg-gray-100 p-3 rounded mt-2 overflow-x-auto text-xs">
-{JSON.stringify(sampleJsonData, null, 2)}
+                {JSON.stringify(sampleJsonData, null, 2)}
               </pre>
             </div>
           </CardContent>

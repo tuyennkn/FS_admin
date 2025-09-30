@@ -1,12 +1,20 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { bookAPI } from '../../services/apiService';
-import { Book, CreateBookRequest, UpdateBookRequest } from '../../types';
+import { Book, CreateBookRequest, UpdateBookRequest, PaginatedResponse } from '../../types';
 
 export interface BookState {
   books: Book[];
   selectedBook: Book | null;
   loading: boolean;
   error: string | null;
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
 }
 
 const initialState: BookState = {
@@ -14,6 +22,14 @@ const initialState: BookState = {
   selectedBook: null,
   loading: false,
   error: null,
+  pagination: {
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    itemsPerPage: 10,
+    hasNext: false,
+    hasPrev: false,
+  },
 };
 
 // Async thunks
@@ -29,6 +45,23 @@ export const fetchBooks = createAsyncThunk(
       }
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch books');
+    }
+  }
+);
+
+// fetch paginated books
+export const fetchPaginatedBooks = createAsyncThunk(
+  'books/fetchPaginated',
+  async ({ page, limit }: { page: number; limit: number }, { rejectWithValue }) => {
+    try {
+      const response = await bookAPI.getPaginated(page, limit);
+      if (response.success) {
+        return response as PaginatedResponse<Book>;
+      } else {
+        return rejectWithValue(response.message);
+      }
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch paginated books');
     }
   }
 );
@@ -107,6 +140,9 @@ const bookSlice = createSlice({
     setSelectedBook: (state, action: PayloadAction<Book | null>) => {
       state.selectedBook = action.payload;
     },
+    setPagination: (state, action: PayloadAction<BookState['pagination']>) => {
+      state.pagination = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -121,6 +157,22 @@ const bookSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchBooks.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Fetch paginated books
+      .addCase(fetchPaginatedBooks.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchPaginatedBooks.fulfilled, (state, action) => {
+        state.loading = false;
+        state.books = action.payload.data;
+        console.log(action.payload);
+        state.pagination = action.payload.meta.pagination;
+        state.error = null;
+      })
+      .addCase(fetchPaginatedBooks.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
@@ -172,5 +224,5 @@ const bookSlice = createSlice({
   },
 });
 
-export const { clearError, setSelectedBook } = bookSlice.actions;
+export const { clearError, setSelectedBook, setPagination } = bookSlice.actions;
 export default bookSlice.reducer;

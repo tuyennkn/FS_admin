@@ -1,7 +1,7 @@
 # Null Category Handling Fix
 
 ## Issue Identified
-From the API response, some books have `category_id: null` while others have populated category objects. The frontend was not properly handling the `null` case, which could cause:
+From the API response, some books have `category: null` while others have populated category objects. The frontend was not properly handling the `null` case, which could cause:
 
 1. TypeScript errors due to missing null handling
 2. Display issues in the UI
@@ -15,12 +15,12 @@ From the API response, some books have `category_id: null` while others have pop
     {
       "id": "68be6f594a8baf2b62cbb93a",
       "title": "sach it nang cao",
-      "category_id": null  // ⚠️ Null category
+      "category": null  // ⚠️ Null category
     },
     {
       "id": "68be7921900d35401a2fd3e3", 
       "title": "Phap y co",
-      "category_id": {     // ✅ Populated category
+      "category": {     // ✅ Populated category
         "id": "68be782f900d35401a2fd3dc",
         "name": "trinh tham",
         "description": "the loai ve truy lung vet tich",
@@ -34,19 +34,19 @@ From the API response, some books have `category_id: null` while others have pop
 ## Fixes Applied
 
 ### 1. Updated TypeScript Types (`src/types/index.ts`)
-Enhanced the Book interface to allow null category_id:
+Enhanced the Book interface to allow null category:
 
 **Before:**
 ```typescript
 export interface Book extends BaseEntity {
-  category_id: Category | string;
+  category: Category | string;
 }
 ```
 
 **After:**
 ```typescript
 export interface Book extends BaseEntity {
-  category_id: Category | string | null;  // ✅ Now allows null
+  category: Category | string | null;  // ✅ Now allows null
 }
 ```
 
@@ -79,22 +79,22 @@ const getCategoryName = (categoryId: string | Category | null) => {
 ```
 
 ### 3. Improved Form Data Population
-Enhanced the useEffect to handle null category_id:
+Enhanced the useEffect to handle null category:
 
 **Before:**
 ```typescript
-const categoryId = typeof book.category_id === 'string' ? book.category_id : book.category_id.id;
+const categoryId = typeof book.category === 'string' ? book.category : book.category.id;
 ```
 
 **After:**
 ```typescript
 let categoryId = '';
-if (book.category_id === null) {
+if (book.category === null) {
   categoryId = '';  // ✅ Handle null explicitly
-} else if (typeof book.category_id === 'string') {
-  categoryId = book.category_id;
-} else if (book.category_id && typeof book.category_id === 'object') {
-  categoryId = book.category_id.id || '';
+} else if (typeof book.category === 'string') {
+  categoryId = book.category;
+} else if (book.category && typeof book.category === 'object') {
+  categoryId = book.category.id || '';
 }
 ```
 
@@ -103,16 +103,16 @@ Updated category filtering to handle books without categories:
 
 **Before:**
 ```typescript
-const categoryId = typeof book.category_id === 'string' ? book.category_id : book.category_id.id;
+const categoryId = typeof book.category === 'string' ? book.category : book.category.id;
 return categoryId === categoryFilter;
 ```
 
 **After:**
 ```typescript
-if (!book.category_id) {
+if (!book.category) {
   return categoryFilter === 'no-category';  // ✅ Filter for books without category
 }
-const categoryId = typeof book.category_id === 'string' ? book.category_id : book.category_id.id;
+const categoryId = typeof book.category === 'string' ? book.category : book.category.id;
 return categoryId === categoryFilter;
 ```
 
@@ -145,14 +145,14 @@ Enhanced category display in the table with visual indicators:
 
 **Before:**
 ```tsx
-<TableCell>{getCategoryName(book.category_id)}</TableCell>
+<TableCell>{getCategoryName(book.category)}</TableCell>
 ```
 
 **After:**
 ```tsx
 <TableCell>
-  {book.category_id ? (
-    getCategoryName(book.category_id)
+  {book.category ? (
+    getCategoryName(book.category)
   ) : (
     <Badge variant="outline" className="text-gray-500">
       No Category
@@ -175,7 +175,7 @@ Enhanced category display in the table with visual indicators:
 
 ### 3. **Better Form Handling**
 - ✅ Edit forms handle books without categories correctly
-- ✅ No errors when opening edit dialog for books with null category_id
+- ✅ No errors when opening edit dialog for books with null category
 - ✅ Form fields populate properly regardless of category status
 
 ### 4. **Type Safety**
@@ -204,7 +204,7 @@ Enhanced category display in the table with visual indicators:
 - Backward compatibility maintained
 
 ## Database Considerations
-The null category_id values in the database might be due to:
+The null category values in the database might be due to:
 1. Books created before categories were implemented
 2. Categories that were deleted after books were created
 3. Manual data entry without category assignment
@@ -213,7 +213,7 @@ The null category_id values in the database might be due to:
 This fix ensures the frontend gracefully handles all these scenarios without breaking the user experience.
 
 ## Deployment Ready
-All fixes are backward compatible and handle the three possible states of category_id:
+All fixes are backward compatible and handle the three possible states of category:
 1. `null` - Books without categories
 2. `string` - Category ID references
 3. `object` - Populated category objects

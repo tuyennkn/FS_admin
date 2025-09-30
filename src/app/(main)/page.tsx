@@ -2,19 +2,15 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAppSelector } from '@/hooks/redux';
+import { useAppDispatch, useAppSelector } from '@/hooks/redux';
+import { retrieveUser } from '@/features/user/userSlice';
+import { setUser } from '@/features/auth/authSlice';
 
 export default function Home() {
-  const router = useRouter();
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.push('/dashboard');
-    } else {
-      router.push('/login');
-    }
-  }, [isAuthenticated, router]);
+  const router = useRouter();
+
+  router.push('/dashboard');
 
   return (
     <div className="min-h-screen flex items-center justify-center">

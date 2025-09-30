@@ -31,7 +31,7 @@ export const bookSchema = yup.object({
   publisher: yup.string().required('Publisher is required'),
   price: yup.number().required('Price is required').min(0, 'Price must be positive'),
   rating: yup.number().required('Rating is required').min(1, 'Rating must be at least 1').max(5, 'Rating cannot exceed 5'),
-  category_id: yup.string().required('Category is required'),
+  category: yup.string().required('Category is required'),
   quantity: yup.number().required('Quantity is required').min(0, 'Quantity must be positive'),
   sold: yup.number().min(0, 'Sold must be positive'),
 });

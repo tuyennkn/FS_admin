@@ -1,12 +1,14 @@
 "use client";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { NavMain } from '@/components/navbar/nav-main';
 import { NavUser } from '@/components/navbar/nav-user';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarRail, SidebarTrigger } from '@/components/ui/sidebar';
 import { Separator } from '@radix-ui/react-separator';
-import { CogIcon, Gauge, LibraryBig, Receipt, TagsIcon, UserIcon, UserStarIcon } from 'lucide-react';
-import { ReactNode } from 'react';
+import { CogIcon, Gauge, LibraryBig, Receipt, TagsIcon, UserIcon, UserStarIcon, Clock } from 'lucide-react';
+import { ReactNode, useEffect } from 'react';
+import { useAppDispatch, useAppSelector } from "@/hooks/redux";
+import { getAccessToken } from "@/utils/tokenUtils";
 
 interface DashboardLayoutProps {
     children: ReactNode;
@@ -14,12 +16,13 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
     const pathname = usePathname();
+    const router = useRouter();
 
     // Get current page name from pathname
     const getCurrentPageName = () => {
         const pathSegments = pathname.split('/').filter(Boolean);
         const lastSegment = pathSegments[pathSegments.length - 1];
-        
+
         switch (lastSegment) {
             case 'dashboard':
                 return 'Dashboard';
@@ -27,6 +30,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 return 'Books';
             case 'categories':
                 return 'Categories';
+            case 'pending-categories':
+                return 'Pending Categories';
             case 'users':
                 return 'Users';
             case 'comments':
@@ -56,6 +61,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             { title: 'Dashboard', url: '/dashboard', icon: Gauge, isActive: pathname === '/dashboard' },
             { title: 'Books', url: '/dashboard/books', icon: LibraryBig, isActive: pathname.startsWith('/dashboard/books') },
             { title: 'Categories', url: '/dashboard/categories', icon: TagsIcon, isActive: pathname.startsWith('/dashboard/categories') },
+            { title: 'Pending Categories', url: '/dashboard/pending-categories', icon: Clock, isActive: pathname.startsWith('/dashboard/pending-categories') },
             { title: 'Users', url: '/dashboard/users', icon: UserIcon, isActive: pathname.startsWith('/dashboard/users') },
             { title: 'Comments', url: '/dashboard/comments', icon: UserStarIcon, isActive: pathname.startsWith('/dashboard/comments') },
             { title: 'Settings', url: '/dashboard/settings', icon: CogIcon, isActive: pathname.startsWith('/dashboard/settings') },
