@@ -1,5 +1,5 @@
 export const API_ENDPOINTS = {
-  BASE_URL: 'http://localhost:8080/router',
+  BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/router',
   
   // Auth endpoints
   AUTH: {
@@ -14,8 +14,8 @@ export const API_ENDPOINTS = {
   // User endpoints
   USER: {
     ALL: '/user/all',
-    GET_BY_ID: '/user/getUser',
-    UPDATE: '/user/update',
+    GET_BY_ID: (id: string) => `/user/${id}`,
+    UPDATE: (id: string) => `/user/${id}`,
     DELETE: '/user/delete',
     TOGGLE_DISABLE: '/user/toggle-disable',
   },
@@ -62,5 +62,27 @@ export const API_ENDPOINTS = {
     GET_BY_BOOK: '/comment/book',
     UPDATE: '/comment/update',
     DELETE: '/comment/delete',
+  },
+
+  // Order endpoints
+  ORDER: {
+    ALL: (page: number, limit: number, status?: string, search?: string) => {
+      let url = `/order?page=${page}&limit=${limit}`;
+      if (status) url += `&status=${status}`;
+      if (search) url += `&search=${encodeURIComponent(search)}`;
+      return url;
+    },
+    GET_BY_ID: (id: string) => `/order/${id}`,
+    UPDATE_STATUS: (id: string) => `/order/${id}/status`,
+    DELETE: (id: string) => `/order/${id}`,
+  },
+
+  // AI Statistics endpoints
+  AI_STATISTICS: {
+    GENERATE: '/statistics/generate',
+    ALL: (page: number, limit: number) => `/statistics?page=${page}&limit=${limit}`,
+    GET_BY_ID: (id: string) => `/statistics/${id}`,
+    STATUS: (id: string) => `/statistics/${id}/status`,
+    DELETE: (id: string) => `/statistics/${id}`,
   },
 };

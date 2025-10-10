@@ -90,9 +90,18 @@ export const userAPI = {
     return response.data as ApiResponse<User[]>;
   },
 
+  getAllPaginated: async (page: number = 1, limit: number = 10, search: string = ''): Promise<PaginatedResponse<User>> => {
+    let url = `${API_ENDPOINTS.USER.ALL}?page=${page}&limit=${limit}`;
+    if (search) {
+      url += `&search=${encodeURIComponent(search)}`;
+    }
+    const response = await api.get(url);
+    return response.data as PaginatedResponse<User>;
+  },
+
   getById: async (id: string): Promise<ApiResponse<User>> => {
     const response = await api.post(
-      API_ENDPOINTS.USER.GET_BY_ID,
+      API_ENDPOINTS.USER.GET_BY_ID(id),
       { id }
     );
     return response.data as ApiResponse<User>;
@@ -100,7 +109,7 @@ export const userAPI = {
 
   update: async (userData: Partial<User> & { id: string }): Promise<ApiResponse<User>> => {
     const response = await api.put(
-      API_ENDPOINTS.USER.UPDATE,
+      API_ENDPOINTS.USER.UPDATE(userData.id),
       userData
     );
     return response.data as ApiResponse<User>;
@@ -277,6 +286,7 @@ export const dashboardAPI = {
       totalBooks: books.data.length,
       totalCategories: categories.data.length,
       totalComments: comments.data.length,
+      totalOrders: books.data.reduce((sum, book) => sum + book.sold, 0),
       activeUsers: users.data.filter(u => !u.isDisable).length,
       activeBooks: books.data.filter(b => !b.isDisable).length,
       revenue: books.data.reduce((sum, book) => sum + (book.price * book.sold), 0),
@@ -346,3 +356,6 @@ export const apiService = {
     }
   }
 };
+
+// Export the api instance for use in other services
+export { api };

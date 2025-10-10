@@ -1,12 +1,20 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { userAPI } from '../../services/apiService';
-import { User } from '../../types';
+import { User, PaginatedResponse } from '../../types';
 
 export interface UserManagementState {
   users: User[];
   selectedUser: User | null;
   loading: boolean;
   error: string | null;
+  pagination: {
+    currentPage: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+    itemsPerPage: number;
+    totalItems: number;
+    totalPages: number;
+  };
 }
 
 const initialState: UserManagementState = {
@@ -14,16 +22,35 @@ const initialState: UserManagementState = {
   selectedUser: null,
   loading: false,
   error: null,
+  pagination: {
+    currentPage: 1,
+    hasNext: false,
+    hasPrev: false,
+    itemsPerPage: 10,
+    totalItems: 0,
+    totalPages: 0,
+  },
 };
 
 // Async thunks
-export const fetchUsers = createAsyncThunk(
+interface FetchUsersParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
+export const fetchUsers = createAsyncThunk<
+  PaginatedResponse<User>,
+  FetchUsersParams,
+  { rejectValue: string }
+>(
   'userManagement/fetchAll',
-  async (_, { rejectWithValue }) => {
+  async (params: FetchUsersParams = {}, { rejectWithValue }) => {
     try {
-      const response = await userAPI.getAll();
+      const { page = 1, limit = 10, search = '' } = params;
+      const response = await userAPI.getAllPaginated(page, limit, search);
       if (response.success) {
-        return response.data;
+        return response;
       } else {
         return rejectWithValue(response.message);
       }
@@ -101,7 +128,8 @@ const userManagementSlice = createSlice({
       })
       .addCase(fetchUsers.fulfilled, (state, action) => {
         state.loading = false;
-        state.users = action.payload;
+        state.users = action.payload.data;
+        state.pagination = action.payload.meta.pagination;
         state.error = null;
       })
       .addCase(fetchUsers.rejected, (state, action) => {

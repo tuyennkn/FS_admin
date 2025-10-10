@@ -10,6 +10,7 @@ import { fetchCategories } from '@/features/category/categorySlice';
 import { fetchBooks } from '@/features/book/bookSlice';
 import { fetchComments } from '@/features/comment/commentSlice';
 import { useRouter } from 'next/dist/client/components/navigation';
+import { FakeDataGenerator } from '@/components/FakeDataGenerator';
 
 interface StatCardProps {
   title: string;
@@ -94,13 +95,22 @@ export default function DashboardPage() {
 
 
   useEffect(() => {
-    dispatch(fetchUsers());
+    dispatch(fetchUsers({ page: 1, limit: 10000 }));
     dispatch(fetchCategories());
     dispatch(fetchBooks());
     dispatch(fetchComments());
   }, [dispatch]);
 
+  const handleDataGenerated = () => {
+    // Refresh all data when fake data is generated/cleaned
+    dispatch(fetchUsers({ page: 1, limit: 10000 }));
+    dispatch(fetchCategories());
+    dispatch(fetchBooks());
+    dispatch(fetchComments());
+  };
+
   // Calculate stats
+  console.log('Users:', users);
   const activeUsers = users.filter(user => !user.isDisable).length;
   const activeBooks = books.filter(book => !book.isDisable).length;
   const totalRevenue = books.reduce((sum, book) => sum + (book.price * book.sold), 0);
@@ -164,6 +174,9 @@ export default function DashboardPage() {
           <StatCard key={index} {...stat} />
         ))}
       </div>
+
+      {/* Fake Data Generator */}
+      <FakeDataGenerator onDataGenerated={handleDataGenerated} />
 
       {/* Charts and activity */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

@@ -5,7 +5,7 @@ import { NavUser } from '@/components/navbar/nav-user';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarRail, SidebarTrigger } from '@/components/ui/sidebar';
 import { Separator } from '@radix-ui/react-separator';
-import { CogIcon, Gauge, LibraryBig, Receipt, TagsIcon, UserIcon, UserStarIcon, Clock } from 'lucide-react';
+import { CogIcon, Gauge, LibraryBig, Receipt, TagsIcon, UserIcon, UserStarIcon, Clock, Brain } from 'lucide-react';
 import { ReactNode, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { getAccessToken } from "@/utils/tokenUtils";
@@ -32,6 +32,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 return 'Categories';
             case 'pending-categories':
                 return 'Pending Categories';
+            case 'ai-statistics':
+                return 'AI Statistics';
             case 'users':
                 return 'Users';
             case 'comments':
@@ -62,6 +64,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             { title: 'Books', url: '/dashboard/books', icon: LibraryBig, isActive: pathname.startsWith('/dashboard/books') },
             { title: 'Categories', url: '/dashboard/categories', icon: TagsIcon, isActive: pathname.startsWith('/dashboard/categories') },
             { title: 'Pending Categories', url: '/dashboard/pending-categories', icon: Clock, isActive: pathname.startsWith('/dashboard/pending-categories') },
+            { title: 'AI Statistics', url: '/dashboard/ai-statistics', icon: Brain, isActive: pathname.startsWith('/dashboard/ai-statistics') },
+            { title: 'Orders', url: '/dashboard/orders', icon: Receipt, isActive: pathname.startsWith('/dashboard/orders') },
             { title: 'Users', url: '/dashboard/users', icon: UserIcon, isActive: pathname.startsWith('/dashboard/users') },
             { title: 'Comments', url: '/dashboard/comments', icon: UserStarIcon, isActive: pathname.startsWith('/dashboard/comments') },
             { title: 'Settings', url: '/dashboard/settings', icon: CogIcon, isActive: pathname.startsWith('/dashboard/settings') },

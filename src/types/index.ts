@@ -281,8 +281,50 @@ export interface DashboardStats {
   totalBooks: number;
   totalCategories: number;
   totalComments: number;
+  totalOrders: number;
   activeUsers: number;
   activeBooks: number;
   revenue: number;
   recentActivity: any[];
+}
+
+// Order types
+export interface OrderItem {
+  book_id: string;
+  book?: {
+    id: string;
+    title: string;
+    author: string;
+    image?: string;
+    slug: string;
+  };
+  quantity: number;
+  price: number;
+}
+
+export interface Order extends BaseEntity {
+  id: string;
+  user_id?: {
+    id: string;
+    username: string;
+    fullname: string;
+    email: string;
+  };
+  items: OrderItem[];
+  total_price: number;
+  shipping_fee: number;
+  shipping_address: string;
+  shipping_phone_number: string;
+  payment_type: 'cash' | 'card' | 'online';
+  status: 'pending' | 'confirmed' | 'processing' | 'shipping' | 'delivered' | 'cancelled';
+}
+
+export interface OrderListParams extends PaginationParams {
+  status?: string;
+  user_id?: string;
+  search?: string;
+}
+
+export interface UpdateOrderStatusRequest {
+  status: 'pending' | 'confirmed' | 'processing' | 'shipping' | 'delivered' | 'cancelled';
 }

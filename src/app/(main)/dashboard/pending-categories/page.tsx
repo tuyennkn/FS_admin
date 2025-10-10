@@ -251,7 +251,7 @@ export default function PendingCategoriesPage() {
   };
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="w-full mx-auto p-6">
       {/* Alert */}
       {alert.type && (
         <div className={`mb-4 p-4 rounded-lg ${

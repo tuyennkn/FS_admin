@@ -213,40 +213,58 @@ export default function ImportBooksPage() {
     setProgress(0);
 
     try {
-      let booksData: BookRecord[] = [];
-
       if (importMode === 'csv' && csvFile) {
-        // Process CSV file
-        const csvText = await csvFile.text();
-        booksData = convertCsvToJson(csvText);
-        console.log('Converted CSV Data:', booksData);
+        // New approach: Send CSV file directly to backend
+        setProgress(10);
+        
+        const formData = new FormData();
+        formData.append('csvFile', csvFile);
+
         setProgress(30);
+
+        const response = await apiService.post('/import/books/csv', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`
+          },
+          onUploadProgress: (progressEvent: any) => {
+            if (progressEvent.total) {
+              const uploadProgress = Math.round((progressEvent.loaded / progressEvent.total) * 60); // 60% for upload
+              setProgress(30 + uploadProgress);
+            }
+          }
+        });
+
+        setProgress(100);
+        setResult(response.data.data || response.data);
+
       } else if (importMode === 'json' && jsonData) {
-        // Process JSON data
+        // Keep existing approach for JSON data
         const parsed = JSON.parse(jsonData);
-        booksData = parsed.books || [];
+        const booksData = parsed.books || [];
         setProgress(30);
+
+        if (booksData.length === 0) {
+          throw new Error('No valid books found in the data');
+        }
+
+        setProgress(50);
+
+        // Call legacy import API
+        const response = await apiService.post('/book/import-csv', {
+          books: booksData
+        }, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        setProgress(100);
+        setResult(response.data.data || response.data);
+
       } else {
         throw new Error('Please provide data to import');
       }
-
-      if (booksData.length === 0) {
-        throw new Error('No valid books found in the data');
-      }
-
-      setProgress(50);
-
-      // Call import API
-      const response = await apiService.post('/book/import-csv', {
-        books: booksData
-      }, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      setProgress(100);
-      setResult(response.data.data);
 
     } catch (err: any) {
       console.error('Import error:', err);
@@ -345,6 +363,9 @@ export default function ImportBooksPage() {
         <Card>
           <CardHeader>
             <CardTitle>Upload CSV File</CardTitle>
+            <p className="text-sm text-gray-600 mt-2">
+              Upload your CSV file directly. The server will process and import the books automatically with AI-powered category analysis.
+            </p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
