@@ -24,7 +24,6 @@ import { useAppSelector } from '@/hooks/redux';
 import { apiService } from '@/services/apiService';
 import { getAccessToken } from '@/utils/tokenUtils';
 import { Book } from '@/types';
-import Papa from "papaparse";
 
 interface ImportResult {
   imported: number;
@@ -66,62 +65,6 @@ export default function ImportBooksPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Helper function to parse array fields from CSV
-  const parseArrayField = (fieldValue: string): string[] | undefined => {
-    if (!fieldValue || fieldValue.trim() === '') {
-      return undefined;
-    }
-    
-    try {
-      // Try to parse as JSON first
-      return JSON.parse(fieldValue);
-    } catch {
-      // If JSON.parse fails, try to parse Python-style array format
-      // e.g., "['item1', 'item2']" or "['Sancho Panza', 'Don Quijote de la Mancha']"
-      const cleaned = fieldValue
-        .trim()
-        .replace(/^\[|\]$/g, '') // Remove outer brackets
-        .replace(/'/g, '"'); // Replace single quotes with double quotes
-      
-      // Split by comma and clean each item
-      const items = cleaned.split(',').map(item => 
-        item.trim().replace(/^"(.*)"$/, '$1') // Remove surrounding quotes
-      ).filter(item => item.length > 0);
-      
-      return items.length > 0 ? items : undefined;
-    }
-  };
-
-  // Helper function to parse genre field (convert array to comma-separated string)
-  const parseGenreField = (fieldValue: string): string => {
-    if (!fieldValue || fieldValue.trim() === '') {
-      return "";
-    }
-    
-    try {
-      // Try to parse as JSON array first
-      const parsed = JSON.parse(fieldValue);
-      if (Array.isArray(parsed)) {
-        return parsed.join(', ');
-      }
-      return fieldValue;
-    } catch {
-      // If JSON.parse fails, try to parse Python-style array format
-      // e.g., "['Classics', 'Fiction', 'Literature']"
-      const cleaned = fieldValue
-        .trim()
-        .replace(/^\[|\]$/g, '') // Remove outer brackets
-        .replace(/'/g, ''); // Remove single quotes
-      
-      // Split by comma and clean each item, then join back
-      const items = cleaned.split(',').map(item => 
-        item.trim().replace(/^"(.*)"$/, '$1') // Remove surrounding quotes if any
-      ).filter(item => item.length > 0);
-      
-      return items.join(', ');
-    }
-  };
-
   // Sample JSON data for reference
   const sampleJsonData = {
     books: [
@@ -159,47 +102,6 @@ export default function ImportBooksPage() {
     }
   };
 
-  const convertCsvToJson = (csvText: string): BookRecord[] => {
-    const result = Papa.parse(csvText, { header: true, skipEmptyLines: true });
-    const books: BookRecord[] = [];
-
-    for (const row of result.data as any[]) {
-      const price = parseFloat((row["price"] || "").replace(/[$,]/g, "")) || 0;
-      
-      // Generate slug from title
-      const slug = (row["title"] || "").toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
-
-      const book: BookRecord = {
-        title: row["title"]?.trim() || "",
-        author: row["author"]?.trim() || "",
-        description: row["description"]?.trim() || "",
-        slug: slug + '-' + Date.now(),
-        publisher: row["publisher"]?.trim() || "",
-        price: price.toString(),
-        genre: parseGenreField(row["genres"]),
-        publishDate: row["publishDate"] || null,
-        image: row["coverImg"] ? [row["coverImg"]] : [],
-        
-        // Additional attributes from demo.csv
-        isbn: row["isbn"] || undefined,
-        pages: row["pages"] ? parseInt(row["pages"]) : undefined,
-        language: row["language"] || undefined,
-        edition: row["edition"] || undefined,
-        bookFormat: row["bookFormat"] || undefined,
-        characters: parseArrayField(row["characters"]),
-        awards: parseArrayField(row["awards"])
-      };
-
-      if (book.title && parseFloat(book.price) > 0) {
-        books.push(book);
-      }
-    }
-
-    return books;
-  };
-
   const handleImport = async () => {
     const token = getAccessToken();
     if (!token) {
@@ -214,7 +116,7 @@ export default function ImportBooksPage() {
 
     try {
       if (importMode === 'csv' && csvFile) {
-        // New approach: Send CSV file directly to backend
+        // Upload CSV file directly to backend for server-side processing
         setProgress(10);
         
         const formData = new FormData();
@@ -229,14 +131,14 @@ export default function ImportBooksPage() {
           },
           onUploadProgress: (progressEvent: any) => {
             if (progressEvent.total) {
-              const uploadProgress = Math.round((progressEvent.loaded / progressEvent.total) * 60); // 60% for upload
+              const uploadProgress = Math.round((progressEvent.loaded / progressEvent.total) * 60);
               setProgress(30 + uploadProgress);
             }
           }
         });
 
         setProgress(100);
-        setResult(response.data.data || response.data);
+        setResult(response.data || response);
 
       } else if (importMode === 'json' && jsonData) {
         // Keep existing approach for JSON data
@@ -346,14 +248,14 @@ export default function ImportBooksPage() {
               <Upload className="h-4 w-4" />
               <span>CSV File Upload</span>
             </Button>
-            <Button
+            {/* <Button
               variant={importMode === 'json' ? 'default' : 'outline'}
               onClick={() => setImportMode('json')}
               className="flex items-center space-x-2"
             >
               <FileText className="h-4 w-4" />
               <span>JSON Data Input</span>
-            </Button>
+            </Button> */}
           </div>
         </CardContent>
       </Card>
@@ -364,8 +266,14 @@ export default function ImportBooksPage() {
           <CardHeader>
             <CardTitle>Upload CSV File</CardTitle>
             <p className="text-sm text-gray-600 mt-2">
-              Upload your CSV file directly. The server will process and import the books automatically with AI-powered category analysis.
+              Upload your CSV file directly. The backend server will:
             </p>
+            <ul className="text-sm text-gray-600 list-disc list-inside mt-2 space-y-1">
+              <li>Parse and validate the CSV data</li>
+              <li>Generate AI embeddings for semantic search</li>
+              <li>Auto-assign categories using AI analysis</li>
+              <li>Create books with all attributes</li>
+            </ul>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>

@@ -47,12 +47,10 @@ export default function CommentsManagementPage() {
     try {
       setLoading(true)
       const data = await commentService.getAllComments()
-      // Ensure data is an array
-      setComments(Array.isArray(data) ? data : [])
+      setComments(data)
     } catch (error) {
       console.error('Error loading comments:', error)
       toast.error('Không thể tải danh sách bình luận')
-      setComments([]) // Set empty array on error
     } finally {
       setLoading(false)
     }
@@ -121,10 +119,10 @@ export default function CommentsManagementPage() {
   }
 
   const stats = {
-    total: Array.isArray(comments) ? comments.length : 0,
-    active: Array.isArray(comments) ? comments.filter(c => !c.isDisabled).length : 0,
-    disabled: Array.isArray(comments) ? comments.filter(c => c.isDisabled).length : 0,
-    avgRating: Array.isArray(comments) && comments.length > 0
+    total: comments.length,
+    active: comments.filter(c => !c.isDisabled).length,
+    disabled: comments.filter(c => c.isDisabled).length,
+    avgRating: comments.length > 0
       ? (comments.reduce((sum, c) => sum + c.rating, 0) / comments.length).toFixed(1)
       : '0'
   }

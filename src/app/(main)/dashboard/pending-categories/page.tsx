@@ -302,14 +302,14 @@ export default function PendingCategoriesPage() {
             <div className="text-2xl font-bold text-green-600">{stats.approved}</div>
           </CardContent>
         </Card>
-        <Card>
+        {/* <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">Rejected</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">{stats.rejected}</div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       {/* Filters */}
@@ -338,7 +338,7 @@ export default function PendingCategoriesPage() {
                 <SelectContent>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="approved">Approved</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
+                  {/* <SelectItem value="rejected">Rejected</SelectItem> */}
                 </SelectContent>
               </Select>
             </div>
@@ -441,14 +441,14 @@ export default function PendingCategoriesPage() {
                           >
                             Assign to Existing
                           </Button>
-                          <Button
+                          {/* <Button
                             size="sm"
                             variant="destructive"
                             onClick={() => handleReview(pending, 'reject')}
                           >
                             <XCircle className="w-4 h-4 mr-1" />
                             Reject
-                          </Button>
+                          </Button> */}
                         </div>
                       )}
                     </div>
