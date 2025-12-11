@@ -17,17 +17,24 @@ interface FakeDataStats {
     totalRevenue: number;
     averageValue: number;
   };
+  comments?: {
+    total: number;
+    averageRating: number;
+    byRating: Array<{ _id: number; count: number }>;
+  };
 }
 
 interface FakeDataGenerationResult {
   usersGenerated: number;
   ordersGenerated: number;
+  commentsGenerated: number;
   statistics: FakeDataStats;
 }
 
 interface FakeDataCleanupResult {
   usersDeleted: number;
   ordersDeleted: number;
+  commentsDeleted: number;
 }
 
 export const fakeDataService = {

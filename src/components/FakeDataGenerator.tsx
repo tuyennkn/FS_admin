@@ -18,7 +18,9 @@ import {
   Loader2, 
   CheckCircle, 
   AlertCircle,
-  BarChart3
+  BarChart3,
+  MessageSquare,
+  Star
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { fakeDataService } from '@/services/fakeDataService';
@@ -33,6 +35,11 @@ interface FakeDataStats {
     byPaymentType: Array<{ _id: string; count: number }>;
     totalRevenue: number;
     averageValue: number;
+  };
+  comments?: {
+    total: number;
+    averageRating: number;
+    byRating: Array<{ _id: number; count: number }>;
   };
 }
 
@@ -56,7 +63,7 @@ export function FakeDataGenerator({ onDataGenerated }: FakeDataGeneratorProps) {
       if (response.success) {
         setMessage({ 
           type: 'success', 
-          text: `Generated ${response.data.usersGenerated} users and ${response.data.ordersGenerated} orders successfully!` 
+          text: `Generated ${response.data.usersGenerated} users, ${response.data.ordersGenerated} orders, and ${response.data.commentsGenerated} comments successfully!` 
         });
         
         // Update stats
@@ -94,7 +101,7 @@ export function FakeDataGenerator({ onDataGenerated }: FakeDataGeneratorProps) {
       if (response.success) {
         setMessage({ 
           type: 'success', 
-          text: `Deleted ${response.data.usersDeleted} users and ${response.data.ordersDeleted} orders successfully!` 
+          text: `Deleted ${response.data.usersDeleted} users, ${response.data.ordersDeleted} orders, and ${response.data.commentsDeleted} comments successfully!` 
         });
         
         // Clear stats
@@ -218,12 +225,20 @@ export function FakeDataGenerator({ onDataGenerated }: FakeDataGeneratorProps) {
             <span className="text-sm">150 fake orders will be generated</span>
           </div>
           <div className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4 text-purple-500" />
+            <span className="text-sm">200 fake comments will be generated</span>
+          </div>
+          <div className="flex items-center gap-2">
             <CheckCircle className="h-4 w-4 text-emerald-500" />
             <span className="text-sm">Vietnamese addresses & phone numbers</span>
           </div>
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 text-orange-500" />
             <span className="text-sm">Realistic order status distribution</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Star className="h-4 w-4 text-yellow-500" />
+            <span className="text-sm">Vietnamese comments with ratings</span>
           </div>
         </div>
 
@@ -277,6 +292,53 @@ export function FakeDataGenerator({ onDataGenerated }: FakeDataGeneratorProps) {
                     </Badge>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Comment Stats */}
+            {stats.comments && (
+              <div className="space-y-2 mt-4">
+                <h5 className="text-sm font-medium">Comment Statistics</h5>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-3 bg-purple-50 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-700">{stats.comments.total}</div>
+                    <div className="text-sm text-purple-600">Total Comments</div>
+                  </div>
+                  
+                  <div className="p-3 bg-yellow-50 rounded-lg">
+                    <div className="text-2xl font-bold text-yellow-700 flex items-center gap-1">
+                      {Number(stats.comments.averageRating).toFixed(1)}
+                      <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+                    </div>
+                    <div className="text-sm text-yellow-600">Average Rating</div>
+                  </div>
+                </div>
+
+                {/* Rating Distribution */}
+                {stats.comments.byRating && stats.comments.byRating.length > 0 && (
+                  <div className="space-y-2">
+                    <h5 className="text-sm font-medium">Rating Distribution</h5>
+                    <div className="space-y-1">
+                      {stats.comments.byRating
+                        .sort((a: { _id: number; count: number }, b: { _id: number; count: number }) => b._id - a._id)
+                        .map((rating: { _id: number; count: number }) => (
+                          <div key={rating._id} className="flex items-center gap-2">
+                            <div className="flex items-center gap-1 w-20">
+                              <span className="text-sm font-medium">{rating._id}</span>
+                              <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
+                            </div>
+                            <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
+                              <div 
+                                className="bg-yellow-500 h-full" 
+                                style={{ width: `${(rating.count / (stats.comments?.total || 1)) * 100}%` }}
+                              />
+                            </div>
+                            <span className="text-sm text-gray-600 w-12 text-right">{rating.count}</span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

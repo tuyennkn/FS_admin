@@ -25,7 +25,7 @@ const commentService = {
   // Admin: Lấy tất cả comments
   getAllComments: async (): Promise<Comment[]> => {
     const response = await apiService.get(API_ENDPOINTS.COMMENT.ALL)
-    return response.data
+    return response.data.data || []
   },
 
   // Admin: Toggle disable comment
@@ -33,7 +33,7 @@ const commentService = {
     const response = await apiService.put(`${API_ENDPOINTS.COMMENT.UPDATE}/${id}`, {
       isDisabled
     })
-    return response.data
+    return response.data.data
   },
 
   // Admin: Xóa comment
@@ -44,7 +44,7 @@ const commentService = {
   // Get comments by book
   getBookComments: async (bookId: string): Promise<Comment[]> => {
     const response = await apiService.get(`${API_ENDPOINTS.COMMENT.GET_BY_BOOK}/${bookId}`)
-    return response.data
+    return response.data.data || []
   }
 }
 

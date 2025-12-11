@@ -33,7 +33,13 @@ import {
   Download,
   Eye,
   Trash2,
-  Star
+  Star,
+  Users,
+  Lightbulb,
+  DollarSign,
+  Sparkles,
+  Target,
+  Camera
 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { vi } from 'date-fns/locale'
@@ -145,29 +151,34 @@ export default function AiStatisticsPage() {
   return (
     <div className="w-full p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <Brain className="h-8 w-8 text-blue-600" />
+      <div className="flex items-center justify-between bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 p-6 rounded-2xl border border-blue-100 shadow-sm">
+        <div className="flex items-center space-x-4">
+          <div className="p-3 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl shadow-lg">
+            <Brain className="h-8 w-8 text-white" />
+          </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">AI Thống Kê Sách</h1>
-            <p className="text-gray-600">Phân tích thông minh về doanh số bán sách</p>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">AI Statistics</h1>
+            <p className="text-gray-600 flex items-center gap-2 mt-1">
+              <Sparkles className="h-4 w-4 text-purple-500" />
+              Smart Recommendation & Analysis
+            </p>
           </div>
         </div>
         
         <Button 
           onClick={generateReport} 
           disabled={generating}
-          className="bg-blue-600 hover:bg-blue-700"
+          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all"
         >
           {generating ? (
             <>
               <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-              Đang tạo...
+              Creating...
             </>
           ) : (
             <>
               <TrendingUp className="h-4 w-4 mr-2" />
-              Tạo Báo Cáo Mới
+              Create New Report
             </>
           )}
         </Button>
@@ -175,141 +186,149 @@ export default function AiStatisticsPage() {
 
       {/* Progress Bar */}
       {generating && (
-        <Card>
+        <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Clock className="h-5 w-5" />
-              <span>Đang tạo báo cáo...</span>
+            <CardTitle className="flex items-center space-x-2 text-blue-700">
+              <Clock className="h-5 w-5 animate-pulse" />
+              <span>Creating report...</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <Progress value={progress} className="w-full" />
-              <p className="text-sm text-gray-600">{progressMessage}</p>
-              <p className="text-xs text-gray-500">
-                Tiến trình: {progress}% - Vui lòng không đóng trang này
+              <Progress value={progress} className="w-full h-3" />
+              <p className="text-sm text-blue-700 font-medium">{progressMessage}</p>
+              <p className="text-xs text-blue-600 flex items-center gap-2">
+                <Sparkles className="h-3 w-3" />
+                Progress: {progress}% - Please do not close this page
               </p>
             </div>
           </CardContent>
         </Card>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Danh sách báo cáo */}
-        <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>Danh Sách Báo Cáo</span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={loadStatistics}
-                  disabled={loading}
-                >
-                  <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                </Button>
-              </CardTitle>
-              <CardDescription>
-                {statistics.length} báo cáo đã tạo
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 max-h-96 overflow-y-auto">
-                {statistics.map((stat) => (
-                  <div
-                    key={stat._id}
-                    className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                      currentReport?._id === stat._id 
-                        ? 'bg-blue-50 border-blue-200' 
-                        : 'hover:bg-gray-50'
-                    }`}
-                    onClick={() => viewReport(stat._id)}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h4 className="font-medium text-sm line-clamp-2">
-                          {stat.title}
-                        </h4>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {format(parseISO(stat.createdAt), 'dd/MM/yyyy HH:mm', { locale: vi })}
-                        </p>
-                        <div className="flex items-center space-x-2 mt-2">
-                          <Badge
-                            variant={
-                              stat.status === 'completed' ? 'default' :
-                              stat.status === 'generating' ? 'default' : 'destructive'
-                            }
-                            className="text-xs"
-                          >
-                            {stat.status === 'completed' && <CheckCircle className="h-3 w-3 mr-1" />}
-                            {stat.status === 'generating' && <Clock className="h-3 w-3 mr-1" />}
-                            {stat.status === 'failed' && <AlertCircle className="h-3 w-3 mr-1" />}
-                            {stat.status === 'completed' ? 'Hoàn thành' :
-                             stat.status === 'generating' ? 'Đang tạo' : 'Lỗi'}
-                          </Badge>
-                          <span className="text-xs text-gray-500">
-                            {stat.totalBooksAnalyzed} sách
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex flex-col space-y-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            viewReport(stat._id)
-                          }}
-                        >
-                          <Eye className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            deleteReport(stat._id)
-                          }}
-                        >
-                          <Trash2 className="h-3 w-3 text-red-500" />
-                        </Button>
-                      </div>
-                    </div>
+      {/* Danh sách báo cáo */}
+      <Card className="border-gray-200 shadow-md hover:shadow-lg transition-shadow">
+        <CardHeader className="bg-gradient-to-r from-gray-50 to-slate-50">
+          <CardTitle className="flex items-center justify-between text-gray-800">
+            <span className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-blue-600" />
+              Report List
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadStatistics}
+              disabled={loading}
+              className="hover:bg-blue-50 hover:border-blue-300 transition-colors"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
+          </CardTitle>
+          <CardDescription className="flex items-center gap-2">
+            <Target className="h-4 w-4" />
+            {statistics.length} reports created
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {statistics.map((stat) => (
+              <div
+                key={stat._id}
+                className={`p-4 border rounded-xl cursor-pointer transition-all hover:shadow-md ${
+                  currentReport?._id === stat._id 
+                    ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-300 shadow-md' 
+                    : 'hover:bg-gray-50 border-gray-200'
+                }`}
+                onClick={() => viewReport(stat._id)}
+              >
+                <div className="space-y-3">
+                  <div>
+                    <h4 className="font-medium text-sm line-clamp-2">
+                      {stat.title}
+                    </h4>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {format(parseISO(stat.createdAt), 'dd/MM/yyyy HH:mm', { locale: vi })}
+                    </p>
                   </div>
-                ))}
-                
-                {statistics.length === 0 && !loading && (
-                  <div className="text-center py-8 text-gray-500">
-                    <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Chưa có báo cáo nào</p>
-                    <p className="text-sm">Tạo báo cáo đầu tiên của bạn!</p>
+                  <div className="flex items-center flex-wrap gap-2">
+                    <Badge
+                      variant={
+                        stat.status === 'completed' ? 'default' :
+                        stat.status === 'generating' ? 'default' : 'destructive'
+                      }
+                      className="text-xs"
+                    >
+                      {stat.status === 'completed' && <CheckCircle className="h-3 w-3 mr-1" />}
+                      {stat.status === 'generating' && <Clock className="h-3 w-3 mr-1" />}
+                      {stat.status === 'failed' && <AlertCircle className="h-3 w-3 mr-1" />}
+                      {stat.status === 'completed' ? 'Hoàn thành' :
+                       stat.status === 'generating' ? 'Đang tạo' : 'Lỗi'}
+                    </Badge>
+                    <span className="text-xs text-gray-500">
+                      {stat.totalBooksAnalyzed} books
+                    </span>
                   </div>
-                )}
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        viewReport(stat._id)
+                      }}
+                    >
+                      <Eye className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        deleteReport(stat._id)
+                      }}
+                    >
+                      <Trash2 className="h-3 w-3 text-red-500" />
+                    </Button>
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Chi tiết báo cáo */}
-        <div className="lg:col-span-2">
-          {currentReport ? (
-            <ReportDetail report={currentReport} />
-          ) : (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <TrendingUp className="h-16 w-16 text-gray-300 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Chọn một báo cáo để xem chi tiết
-                </h3>
-                <p className="text-gray-500 text-center">
-                  Chọn báo cáo từ danh sách bên trái hoặc tạo báo cáo mới
+            ))}
+            
+            {statistics.length === 0 && !loading && (
+              <div className="text-center py-12 text-gray-500 col-span-full">
+                <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                  <BookOpen className="h-10 w-10 text-blue-400" />
+                </div>
+                <p className="font-medium text-gray-700">No reports found</p>
+                <p className="text-sm flex items-center justify-center gap-2 mt-2">
+                  <Sparkles className="h-4 w-4" />
+                  Create your first report!
                 </p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Chi tiết báo cáo */}
+      {currentReport ? (
+        <ReportDetail report={currentReport} />
+      ) : (
+        <Card className="border-dashed border-2 border-gray-300 bg-gradient-to-br from-gray-50 to-slate-50">
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <div className="p-6 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl mb-4">
+              <TrendingUp className="h-16 w-16 text-blue-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              Select a report to view details
+            </h3>
+            <p className="text-gray-600 text-center flex items-center gap-2">
+              <Eye className="h-4 w-4" />
+              Select a report from the list above or create a new report
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
@@ -319,27 +338,31 @@ function ReportDetail({ report }: { report: AiStatistic }) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <Card>
+      <Card className="border-blue-200 shadow-lg bg-gradient-to-br from-white to-blue-50">
         <CardHeader>
           <div className="flex items-start justify-between">
-            <div>
-              <CardTitle className="text-xl">{report.title}</CardTitle>
-              <CardDescription className="mt-2 whitespace-pre-line">
+            <div className="flex-1">
+              <CardTitle className="text-2xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                {report.title}
+              </CardTitle>
+              <CardDescription className="mt-3 text-gray-700 whitespace-pre-line leading-relaxed">
                 {report.summary}
               </CardDescription>
-              <div className="flex items-center space-x-4 mt-4">
-                <Badge variant="default">
+              <div className="flex items-center flex-wrap gap-3 mt-4">
+                <Badge variant="default" className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white">
+                  <Clock className="h-3 w-3 mr-1" />
                   {format(parseISO(report.start), 'dd/MM/yyyy', { locale: vi })} - {' '}
                   {format(parseISO(report.end), 'dd/MM/yyyy', { locale: vi })}
                 </Badge>
-                <Badge variant="default">
-                  {report.totalBooksAnalyzed} sách được phân tích
+                <Badge variant="default" className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                  <BookOpen className="h-3 w-3 mr-1" />
+                  {report.totalBooksAnalyzed} books analyzed
                 </Badge>
               </div>
             </div>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="hover:bg-blue-50 hover:border-blue-300 transition-colors">
               <Download className="h-4 w-4 mr-2" />
-              Xuất PDF
+              Export PDF
             </Button>
           </div>
         </CardHeader>
@@ -348,11 +371,14 @@ function ReportDetail({ report }: { report: AiStatistic }) {
       {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Top Books Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Top Sách Bán Chạy</CardTitle>
+        <Card className="border-gray-200 shadow-md hover:shadow-xl transition-shadow">
+          <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
+            <CardTitle className="text-lg flex items-center gap-2 text-blue-700">
+              <TrendingUp className="h-5 w-5" />
+              Top Selling Books
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={report.chartData.topBooks}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -372,11 +398,14 @@ function ReportDetail({ report }: { report: AiStatistic }) {
         </Card>
 
         {/* Reason Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Phân Bố Lý Do Thành Công</CardTitle>
+        <Card className="border-gray-200 shadow-md hover:shadow-xl transition-shadow">
+          <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
+            <CardTitle className="text-lg flex items-center gap-2 text-green-700">
+              <Target className="h-5 w-5" />
+              Reason Distribution
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
@@ -399,11 +428,14 @@ function ReportDetail({ report }: { report: AiStatistic }) {
         </Card>
 
         {/* Trends */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Xu Hướng Doanh Số</CardTitle>
+        <Card className="border-gray-200 shadow-md hover:shadow-xl transition-shadow">
+          <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
+            <CardTitle className="text-lg flex items-center gap-2 text-purple-700">
+              <TrendingUp className="h-5 w-5" />
+              Sales Trends
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={report.chartData.trends}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -424,11 +456,14 @@ function ReportDetail({ report }: { report: AiStatistic }) {
         </Card>
 
         {/* Correlations */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Tương Quan Yếu Tố</CardTitle>
+        <Card className="border-gray-200 shadow-md hover:shadow-xl transition-shadow">
+          <CardHeader className="bg-gradient-to-r from-red-50 to-orange-50">
+            <CardTitle className="text-lg flex items-center gap-2 text-red-700">
+              <Sparkles className="h-5 w-5" />
+              Correlations
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={report.chartData.correlations}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -443,23 +478,29 @@ function ReportDetail({ report }: { report: AiStatistic }) {
       </div>
 
       {/* Book Analysis */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Phân Tích Chi Tiết Từng Sách</CardTitle>
+      <Card className="border-gray-200 shadow-md hover:shadow-xl transition-shadow">
+        <CardHeader className="bg-gradient-to-r from-yellow-50 to-amber-50">
+          <CardTitle className="flex items-center gap-2 text-yellow-700">
+            <BookOpen className="h-5 w-5" />
+            Book Analysis
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {report.bookAnalysis.map((book, index) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <h4 className="font-medium">{book.book}</h4>
-                  <p className="text-sm text-gray-600">{book.reason}</p>
+              <div key={index} className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl border border-gray-200 hover:shadow-md transition-shadow">
+                <div className="flex-1">
+                  <h4 className="font-semibold text-gray-900">{book.book}</h4>
+                  <p className="text-sm text-gray-600 mt-1 flex items-center gap-2">
+                    <Lightbulb className="h-4 w-4 text-yellow-500" />
+                    {book.reason}
+                  </p>
                 </div>
-                <div className="text-right">
-                  <p className="font-medium">{book.salesCount} cuốn</p>
-                  <div className="flex items-center justify-end text-sm text-gray-600">
-                    <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                    <span>{book.rating}/5</span>
+                <div className="text-right ml-4">
+                  <p className="font-bold text-blue-600">{book.salesCount} cuốn</p>
+                  <div className="flex items-center justify-end text-sm text-gray-600 mt-1">
+                    <Star className="h-4 w-4 text-yellow-400 mr-1 fill-yellow-400" />
+                    <span className="font-medium">{book.rating}/5</span>
                   </div>
                 </div>
               </div>
@@ -470,24 +511,29 @@ function ReportDetail({ report }: { report: AiStatistic }) {
 
       {/* AI Deep Insights */}
       {report.aiInsights && (
-        <Card>
-          <CardHeader>
+        <Card className="border-purple-200 shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-white to-purple-50">
+          <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50">
             <CardTitle className="flex items-center space-x-2">
-              <Brain className="h-5 w-5 text-purple-600" />
-              <span>AI Deep Insights</span>
+              <div className="p-2 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-lg">
+                <Brain className="h-5 w-5 text-white" />
+              </div>
+              <span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">AI Deep Insights</span>
             </CardTitle>
-            <CardDescription>
-              Phân tích sâu về tâm lý khách hàng và xu hướng thị trường
+            <CardDescription className="flex items-center gap-2 mt-2">
+              <Sparkles className="h-4 w-4 text-purple-500" />
+              In-depth analysis of customer psychology and market trends
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Customer Insights */}
               {report.aiInsights.customerInsights && (
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-2xl">🧠</span>
-                    <h4 className="font-semibold text-purple-700">Customer Insights</h4>
+                <div className="space-y-3 p-5 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 hover:shadow-md transition-shadow">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg">
+                      <Users className="h-5 w-5 text-white" />
+                    </div>
+                    <h4 className="font-semibold text-purple-700 text-lg">Customer Insights</h4>
                   </div>
                   <p className="text-gray-700 text-sm leading-relaxed">
                     {report.aiInsights.customerInsights}
@@ -497,10 +543,12 @@ function ReportDetail({ report }: { report: AiStatistic }) {
 
               {/* Market Trends */}
               {report.aiInsights.marketTrends && (
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-2xl">📈</span>
-                    <h4 className="font-semibold text-green-700">Market Trends</h4>
+                <div className="space-y-3 p-5 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 hover:shadow-md transition-shadow">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg">
+                      <TrendingUp className="h-5 w-5 text-white" />
+                    </div>
+                    <h4 className="font-semibold text-green-700 text-lg">Market Trends</h4>
                   </div>
                   <p className="text-gray-700 text-sm leading-relaxed">
                     {report.aiInsights.marketTrends}
@@ -510,10 +558,12 @@ function ReportDetail({ report }: { report: AiStatistic }) {
 
               {/* Business Opportunities */}
               {report.aiInsights.businessOpportunities && (
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-2xl">💡</span>
-                    <h4 className="font-semibold text-yellow-700">Business Opportunities</h4>
+                <div className="space-y-3 p-5 rounded-xl bg-gradient-to-br from-yellow-50 to-amber-50 border border-yellow-200 hover:shadow-md transition-shadow">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-gradient-to-br from-yellow-500 to-amber-500 rounded-lg">
+                      <Lightbulb className="h-5 w-5 text-white" />
+                    </div>
+                    <h4 className="font-semibold text-yellow-700 text-lg">Business Opportunities</h4>
                   </div>
                   <p className="text-gray-700 text-sm leading-relaxed">
                     {report.aiInsights.businessOpportunities}
@@ -523,10 +573,12 @@ function ReportDetail({ report }: { report: AiStatistic }) {
 
               {/* Pricing Strategy */}
               {report.aiInsights.pricingStrategy && (
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-2xl">💰</span>
-                    <h4 className="font-semibold text-blue-700">Pricing Strategy</h4>
+                <div className="space-y-3 p-5 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 hover:shadow-md transition-shadow">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg">
+                      <DollarSign className="h-5 w-5 text-white" />
+                    </div>
+                    <h4 className="font-semibold text-blue-700 text-lg">Pricing Strategy</h4>
                   </div>
                   <p className="text-gray-700 text-sm leading-relaxed">
                     {report.aiInsights.pricingStrategy}
@@ -536,10 +588,12 @@ function ReportDetail({ report }: { report: AiStatistic }) {
 
               {/* Predictions */}
               {report.aiInsights.predictions && (
-                <div className="space-y-3 md:col-span-2">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-2xl">🔮</span>
-                    <h4 className="font-semibold text-indigo-700">Predictions (3-6 months)</h4>
+                <div className="space-y-3 p-5 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 hover:shadow-md transition-shadow md:col-span-2">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg">
+                      <Sparkles className="h-5 w-5 text-white" />
+                    </div>
+                    <h4 className="font-semibold text-indigo-700 text-lg">Predictions (3-6 months)</h4>
                   </div>
                   <p className="text-gray-700 text-sm leading-relaxed">
                     {report.aiInsights.predictions}
@@ -553,24 +607,30 @@ function ReportDetail({ report }: { report: AiStatistic }) {
 
       {/* Conclusion & Recommendations */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Kết Luận</CardTitle>
+        <Card className="border-gray-200 shadow-md hover:shadow-xl transition-shadow bg-gradient-to-br from-white to-green-50">
+          <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
+            <CardTitle className="flex items-center gap-2 text-green-700">
+              <CheckCircle className="h-5 w-5" />
+              Conclusion
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-700">{report.conclusion}</p>
+            <p className="text-gray-700 leading-relaxed">{report.conclusion}</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Gợi Ý Chiến Lược</CardTitle>
+        <Card className="border-gray-200 shadow-md hover:shadow-xl transition-shadow bg-gradient-to-br from-white to-blue-50">
+          <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
+            <CardTitle className="flex items-center gap-2 text-blue-700">
+              <Target className="h-5 w-5" />
+              Recommendations
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {report.recommendations.map((rec, index) => (
-                <li key={index} className="flex items-start space-x-2">
-                  <span className="text-blue-600 mt-1">•</span>
+                <li key={index} className="flex items-start space-x-3 p-3 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 hover:shadow-sm transition-shadow">
+                  <CheckCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
                   <span className="text-gray-700">{rec}</span>
                 </li>
               ))}

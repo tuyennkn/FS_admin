@@ -138,7 +138,7 @@ export default function ImportBooksPage() {
         });
 
         setProgress(100);
-        setResult(response.data || response);
+        setResult(response.data.data || response);
 
       } else if (importMode === 'json' && jsonData) {
         // Keep existing approach for JSON data
