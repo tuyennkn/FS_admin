@@ -134,7 +134,6 @@ export default function CommentsManagementPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <MessageSquare className="h-8 w-8 text-blue-600" />
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Quản Lý Bình Luận</h1>
             <p className="text-gray-600">Quản lý tất cả bình luận và đánh giá</p>
@@ -143,7 +142,7 @@ export default function CommentsManagementPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-600">
@@ -174,20 +173,6 @@ export default function CommentsManagementPage() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-red-600">{stats.disabled}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Đánh Giá TB
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center space-x-2">
-              <span className="text-3xl font-bold">{stats.avgRating}</span>
-              <Star className="h-6 w-6 fill-yellow-400 text-yellow-400" />
-            </div>
           </CardContent>
         </Card>
       </div>
